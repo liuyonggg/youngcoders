@@ -1,0 +1,6 @@
+print ("Hello", "World!")
+print ("Hello " + "World")
+print ("Hello %s" % "World")
+print ("2 + 3 =", 2+3)
+print ("I'd much rather you 'not'.")
+print ('I "said" do not touch this.')
