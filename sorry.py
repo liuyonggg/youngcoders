@@ -327,11 +327,11 @@ class strategy(object):
         self.cardstretegies[type(card)](card)
 
     def filtersortpawns(self):
-		pawns = filter(lambda x: not self.game.board.in_home(x), self._player.pawns)
+        pawns = filter(lambda x: not self.game.board.in_home(x), self._player.pawns)
         return sorted(pawns, lambda x, y: cmp(x.positon, y.positon))
 
     def card1_2_common_strategy(self, card):
-		pawns = self.filtersortpawns()
+        pawns = self.filtersortpawns()
         done = False
         for pawn in pawns:
             pos = self.game.board.positon(card, pawn)
@@ -347,7 +347,7 @@ class strategy(object):
                     break
 
     def only_move_cards_common_strategy(self, card):
-		pawns = self.filtersortpawns()
+        pawns = self.filtersortpawns()
         for pawn in pawns:
             pos = self.game.board.positon(card, pawn)
             slided_pos = self.game.board.slide(pos)
@@ -356,7 +356,7 @@ class strategy(object):
                 break
 
     def move_backwards_strategy(self, card):
-		pawns = self.filtersortpawns()
+        pawns = self.filtersortpawns()
         for pawn in pawns[::-1]:
             pos = self.game.board.positon(card, pawn)
             slided_pos = self.game.board.slide(pos)
@@ -406,13 +406,14 @@ class strategy(object):
 
     def card11_strategy(self, card):
         pawns = self.filtersortpawns()
+        avaliable_pawn = False
         for pawn in pawns[::-1]:
             if pawn.position >= 0 and not self.game.board.in_safetyzone(pawn):
+                avaliable_pawn = True
                 break
-        if not pawn: 
+        if not avaliable_pawn: 
             # forfeit the turn due to no available pawns
             return
-        ci = parameter().colors().index(pawn.color)
 
         min_dist = parameter().num_space 
         min_pawn = None
@@ -425,17 +426,39 @@ class strategy(object):
                             min_pawn = op
         if min_pawn:
             if self._game.board.distance(pawn, min_pawn) > 11:
-                # switch
-                pass
+                card.apply(pawn, min_pawn, card11.CARD_MODE[1], board)
             else:
                 # move foward 11 spaces
-                pass
+                card.apply(pawn, min_pawn, card11.CARD_MODE[0], board)
+        else:
+            assert(not min_pawn)
+            card.apply(pawn, min_pawn, card11.CARD_MODE[0], board)
 
     def card12_strategy(self, card):
         only_move_cards_common_strategy(card)
 
     def cardsorry_strategy(self, card):
-        pass
+        pawns = self.filtersortpawns()
+        avaliable_pawn = False
+        for pawn in pawns:
+            if pawn.position < 0:
+                avaliable_pawn = True
+                break
+        if not avaliable_pawn: 
+            # forfeit the turn due to no available pawns
+            return
+
+        min_dist = parameter().num_space 
+        min_pawn = None
+        for player in self._game.players:
+            if player != self._player:
+                for op in player.pawns:
+                    if not self._game.board.in_safetyzone(op) and op.position != parameter().start_position:
+                        dist = self._game.board.dist_home(op)
+                        if dist < min_dist:
+                            min_pawn = op
+        if min_pawn:
+            card.apply(pawn, min_pawn, None, board)
 
 class game(object):
     def __init__(self):
