@@ -81,31 +81,45 @@ class safetyzone(object):
         self._prefix = prefix_position
 
     def position(self, pos, spaces):
-        assert (self.entering_safetyzone(pos) or self.in_safetyzone(pos))
-        if (pos <= enterpoint) and (pos + spaces >= enterpoint):
+        assert (self.in_or_entering_safetyzone(pos))
+        home_pos = self._prefix + self._depth + self._enterpoint
+        if (pos <= self._enterpoint) and (pos + spaces >= self._enterpoint):
             pos += self._prefix
         new_pos = pos + spaces
-        if (new_pos > self._prefix + self._depth):
-            new_pos = self._prefix + self._depth - (new_pos - self._depth)
-            if new_pos <= 0:
-                new_pos = self._enterpoint - new_pos
-            else:
-                new_pos += self.prefix_position
+        if (new_pos > home_pos):
+            new_pos = home_pos - (new_pos - home_pos)
         elif (new_pos <= self._prefix + self._enterpoint):
             new_pos -= self._prefix
         return new_pos
 
     def in_safetyzone(self, pos):
-        return (pos > prefix_position)
+        """
+        decide if a position is in this safetyzone
+        pos = number representing a position on the board
+        """
+        assert(pos <= self._prefix + self._depth + self._enterpoint)
+        return (pos > self._prefix)
 
     def entering_safetyzone(self, pos):
+        """
+        decide if a position is at the enter point of this safetyzone
+        pos = number representing a position on the board
+        """
         return (pos == self._enterpoint)
 
-    def should_enter_safetyzone(self, pos):
-        return (pos >= self._enterpoint)
+    def in_or_entering_safetyzone(self, pos):
+        """
+        decide if a position is at the enter point of this safetyzone or the safetyzone itself
+        pos = number representing a position on the board
+        """
+        return self.entering_safetyzone(pos) or self.in_safetyzone(pos)
 
     def in_home(self, pos):
-        return (pos == prefix_position + self._enterpoint + self._depth)
+        """
+        decide if a position is in the home of the safety zone
+        pos = number representing a position on the board
+        """
+        return (pos == self._prefix + self._enterpoint + self._depth)
         
 class board(object):
     """ board: the place where the pawn put on
@@ -115,8 +129,8 @@ class board(object):
         4. slide point: the first space to the 4th space, the 9th space to 13th space
     """
     def __init__(self):
-        colors = parameter().colors()
-        self._safetyzones = [safetyzone(c, colors[i], parameter().enterpoint_safety_zone + i * 15, parameter.num_space+100) for i in range(len(colors))]
+        colors = parameter().colors
+        self._safetyzones = [safetyzone(colors[i], parameter().enterpoint_safety_zone + i * 15, parameter.num_space+100) for i in range(len(colors))]
         self._slides = {}
         for i in range(len(colors)):
             self._slides[i*15+1]  = i*15+4
@@ -124,9 +138,9 @@ class board(object):
 
     def position(self, pawn, spaces):
         new_pos = pawn.position + spaces
-        sz = self._safetyzones[parameter.colors.index[pawn.color]]
-        if sz.should_enter_safetyzone(new_pos):
-            new_pos = sz.position(pawn.position, spaces)
+        sz = self._safetyzones[parameter.colors.index(pawn.color)]
+        if sz.in_or_entering_safetyzone(new_pos):
+            new_pos = sz.position(pawn.position(), spaces)
         return new_pos
 
     def slide(self, pos):
@@ -136,11 +150,11 @@ class board(object):
         return new_pos
 
     def in_home(self, pawn):
-        ci = parameter().colors().index(pawn.color)
+        ci = parameter().colors().index(pawn.color())
         return self._safetyzones[ci].in_home(pawn.position())
 
     def in_safetyzone(self, pawn):
-        ci = parameter().colors().index(pawn.color)
+        ci = parameter().colors().index(pawn.color())
         return self._safetyzones[ci].in_safetyzone(pawn.position())
 
     def dist_home(self, pawn):
@@ -157,9 +171,7 @@ class board(object):
     def distance(self, pawn1, pawn2):
         assert (not self.in_safetyzone(pawn1))
         assert (not self.in_safetyzone(pawn2))
-        dis = pawn1.position - pawn2.position
-        if dis < 0:
-            dis += parameter().num_space
+        dis = abs(pawn1.position() - pawn2.position())
         assert (dis >= 0)
         return dis
 
@@ -417,21 +429,23 @@ class strategy(object):
 
         min_dist = parameter().num_space 
         min_pawn = None
+        max_score = -100 # amount of spaces pawn travels - the distance to home
         for player in self._game.players:
             if player != self._player:
                 for op in player.pawns:
                     if not self._game.board.in_safetyzone(op) and op.position != parameter().start_position:
-                        dist = self._game.board.dist_home(op)
-                        if dist < min_dist:
+                        score = self._game.board.distance(pawn, op) - self._game.board.dist_home(op)
+                        if score > max_score:
+                            max_score = score
                             min_pawn = op
         if min_pawn:
             if self._game.board.distance(pawn, min_pawn) > 11:
                 card.apply(pawn, min_pawn, card11.CARD_MODE[1], board)
             else:
-                # move foward 11 spaces
                 card.apply(pawn, min_pawn, card11.CARD_MODE[0], board)
         else:
             assert(not min_pawn)
+            assert(max_score == -100)
             card.apply(pawn, min_pawn, card11.CARD_MODE[0], board)
 
     def card12_strategy(self, card):
