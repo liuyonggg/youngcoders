@@ -52,10 +52,149 @@ class SafetyzoneTest(unittest.TestCase):
 class BoardTest(unittest.TestCase):
     def setUp(self):
         self.b = sorry.board()
-        self.p = sorry.pawn("YELLOW", None, 0)
+        self.p = sorry.pawn("YELLOW", None, 3)
+        self.p1 = sorry.pawn("YELLOW", None, 1)
 
-    def test_position(self):
-        print self.b.position(self.p, 10)
+    def test_position_1(self):
+        self.assertEqual(self.b.position(self.p, 10), 13)
+
+    def test_position_2(self):
+        self.assertEqual(self.b.position(self.p, 20), 23)
+
+    def test_position_3(self):
+        self.assertEqual(self.b.position(self.p1, 6), 167)
+
+    def test_position_4(self):
+        self.assertEqual(self.b.position(self.p1, 9), 164)
+
+    def test_slide_1(self):
+        self.assertEqual(self.b.slide(4), 4)
+
+    def test_slide_2(self):
+        self.assertEqual(self.b.slide(1), 4)
+
+    def test_slide_3(self):
+        self.assertEqual(self.b.slide(39), 43)
+
+    def test_in_home_1(self):
+        self.assertTrue(self.b.in_home(sorry.pawn("YELLOW", None, 167)))
+
+    def test_in_home_2(self):
+        self.assertFalse(self.b.in_home(self.p))
+
+    def test_in_safetyzone_1(self):
+        self.assertFalse(self.b.in_safetyzone(self.p1))
+
+    def test_in_safetyzone_2(self):
+        self.assertTrue(self.b.in_safetyzone(sorry.pawn("YELLOW", None, 162)))
+
+    def test_dist_home_1(self):
+        self.assertEqual(self.b.dist_home(self.p1), 6)
+
+    def test_dist_home_2(self):
+        self.assertEqual(self.b.dist_home(self.p), 64)
+    
+    def test_distance_1(self):
+        self.assertEqual(self.b.distance(self.p, self.p1), 58)
+
+    def test_distance_2(self):
+        self.assertEqual(self.b.distance(self.p, sorry.pawn("YELLOW", None, 4)), 1)
+
+class CardTest(unittest.TestCase):
+    def setUp(self):
+        self.p1 = sorry.pawn("YELLOW", None, 3)
+        self.p2 = sorry.pawn("YELLOW", None, -1)
+        self.p3 = sorry.pawn("RED", None, 43)
+        self.b = sorry.board()
+
+    def test_cardcommon_1(self):
+        c = sorry.cardcommon()
+        c.apply(self.p1, None, 0, self.b, 4)
+        self.assertEqual(self.p1.position, 7)
+
+    def test_card1_1(self):
+        c = sorry.card1()
+        c.apply(self.p1, None, c.CARD_MODE[1], self.b)
+        self.assertEqual(self.p1.position, 4)
+
+    def test_card1_2(self):
+        c = sorry.card1()
+        c.apply(self.p2, None, c.CARD_MODE[0], self.b)
+        self.assertEqual(self.p2.position, 3)
+
+    def test_card2_1(self):
+        c = sorry.card2()
+        c.apply(self.p1, None, c.CARD_MODE[1], self.b)
+        self.assertEqual(self.p1.position, 5)
+
+    def test_card2_2(self):
+        c = sorry.card2()
+        c.apply(self.p2, None, c.CARD_MODE[0], self.b)
+        self.assertEqual(self.p1.position, 3)
+
+    def test_card3_1(self):
+        c = sorry.card3()
+        c.apply(self.p1, None, 0, self.b)
+        self.assertEqual(self.p1.position, 6)
+
+    def test_card4_1(self):
+        c = sorry.card4()
+        c.apply(self.p3, None, 0, self.b)
+        self.assertEqual(self.p3.position, 39)
+
+    def test_card5_1(self):
+        c = sorry.card5()
+        c.apply(self.p1, None, 0, self.b)
+        self.assertEqual(self.p1.position, 8)
+
+    def test_card7_1(self):
+        c = sorry.card7()
+        c.apply(self.p1, None, 0, self.b)
+        self.assertEqual(self.p1.position, 10)
+
+    def test_card8_1(self):
+        c = sorry.card8()
+        c.apply(self.p1, None, 0, self.b)
+        self.assertEqual(self.p1.position, 11)
+
+    def test_card10_1(self):
+        c = sorry.card10()
+        c.apply(self.p1, None, "FORWARD", self.b)
+        self.assertEqual(self.p1.position, 13)
+
+    def test_card10_2(self):
+        c = sorry.card10()
+        c.apply(self.p1, None, "BACKWARD", self.b)
+        self.assertEqual(self.p1.position, 2)
+
+    def test_card11_1(self):
+        c = sorry.card11()
+        c.apply(self.p1, None, "FORWARD", self.b)
+        self.assertEqual(self.p1.position, 14)
+
+    def test_card11_2(self):
+        c = sorry.card11()
+        c.apply(self.p1, self.p3, "EXCHANGE", self.b)
+        self.assertEqual(self.p1.position, 43)
+        self.assertEqual(self.p3.position, 3)
+
+    def test_card12_1(self):
+        c = sorry.card12()
+        c.apply(self.p1, None, "FORWARD", self.b)
+        self.assertEqual(self.p1.position, 15)
+
+    def test_cardsorry(self):
+        c = sorry.cardsorry()
+        c.apply(self.p1, self.p3, 0, self.b)
+        self.assertEqual(self.p1.position, 43)
+        self.assertEqual(self.p3.position, -1)
+
+class PlayerTest(unittest.TestCase):
+    def setUp(self):
+        self.p = sorry.player("Jack", "YELLOW", None)
+
+    def test_is_win_1(self):
+        self.assertFalse(self.p.is_win())
 
 if __name__ == "__main__":
     unittest.main()

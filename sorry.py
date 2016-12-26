@@ -28,6 +28,7 @@
    3. start point is not in the four lines, exit point is 4th space in the corresponding line
    4. slide point: the first space to the 4th space, the 9th space to 13th space
 """
+import random
 
 class parameter(object):
     colors = ["YELLOW", "GREEN", "RED", "BLUE"]
@@ -70,6 +71,9 @@ class pawn(object):
     def in_start(self):
         return self._position == parameter().start_position
 
+    def in_home(self):
+        return self._position == parameter().enterpoint_space + parameter().depth_safetyzone + 100 +parameter().num_space
+
 class safetyzone(object):
     """ safetyzone: the place where the pawn won't be influence by opponents' pawn
        not in the 4 lines, enter point is first space in the corresponding line,  each zone takes 6 spaces
@@ -83,7 +87,7 @@ class safetyzone(object):
     def position(self, pos, spaces):
         assert (self.in_or_entering_safetyzone(pos))
         home_pos = self._prefix + self._depth + self._enterpoint
-        if (pos <= self._enterpoint) and (pos + spaces >= self._enterpoint):
+        if (pos == self._enterpoint):
             pos += self._prefix
         new_pos = pos + spaces
         if (new_pos > home_pos):
@@ -137,10 +141,21 @@ class board(object):
             self._slides[i*15+9]  = i*15+13
 
     def position(self, pawn, spaces):
-        new_pos = pawn.position + spaces
-        sz = self._safetyzones[parameter.colors.index(pawn.color)]
-        if sz.in_or_entering_safetyzone(new_pos):
-            new_pos = sz.position(pawn.position(), spaces)
+        new_pos = pawn.position
+        entering_safetyzone = False
+        for i in xrange(abs(spaces)):
+            sz = self._safetyzones[parameter.colors.index(pawn.color)]
+            if new_pos == 61:
+                new_pos = 1
+            if sz.in_or_entering_safetyzone(new_pos):
+                entering_safetyzone = True
+                break
+            if spaces < 0:
+                new_pos = new_pos - 1
+            else:
+                new_pos = new_pos + 1
+        if entering_safetyzone:
+            new_pos = sz.position(new_pos, spaces - i)
         return new_pos
 
     def slide(self, pos):
@@ -150,30 +165,37 @@ class board(object):
         return new_pos
 
     def in_home(self, pawn):
-        ci = parameter().colors().index(pawn.color())
-        return self._safetyzones[ci].in_home(pawn.position())
+        ci = parameter().colors.index(pawn.color)
+        return self._safetyzones[ci].in_home(pawn.position)
 
     def in_safetyzone(self, pawn):
-        ci = parameter().colors().index(pawn.color())
-        return self._safetyzones[ci].in_safetyzone(pawn.position())
+        ci = parameter().colors.index(pawn.color)
+        return self._safetyzones[ci].in_safetyzone(pawn.position)
 
     def dist_home(self, pawn):
-        #FIXME: the caculation is wrong!
         "distance to home"
-        ci = parameter().colors().index(pawn.color)
-        res = 0
-        if (self._safetyzones[ci].should_enter_safetyzone(pawn.position)):
-            res = self._safetyzones[ci]._enterpoint + parameter().depth_safetyzone - pawn.pos - self._safetyzones[ci]._prefix
+        ci = parameter().colors.index(pawn.color)
+        sz = self._safetyzones[ci]
+        enterpoint = self._safetyzones[ci]._enterpoint
+        if self.in_safetyzone(pawn):
+            return (sz._enterpoint + sz._prefix + sz._depth) - pawn.position
+        if pawn.position <= enterpoint:
+            return (enterpoint - pawn.position) + sz._depth
         else:
-            res = self._safetyzones[ci]._enterpoint + parameter().depth_safetyzone - pawn.pos
-        return res
+            return (parameter.num_space - pawn.position) + enterpoint + sz._depth
 
     def distance(self, pawn1, pawn2):
+        """
+        distance from pawn1 to pawn2 counted in spaces on board
+        pawn1: pawn object
+        pawn2: pawn object
+        """
         assert (not self.in_safetyzone(pawn1))
         assert (not self.in_safetyzone(pawn2))
-        dis = abs(pawn1.position() - pawn2.position())
-        assert (dis >= 0)
-        return dis
+        assert (pawn2.position != pawn1.position)
+        if pawn2.position < pawn1.position:
+            return parameter().num_space - (pawn1.position - pawn2.position)
+        return pawn2.position - pawn1.position
 
 class player(object):
     """each player has a name, color, 4 pawns and a strategy"""
@@ -184,7 +206,11 @@ class player(object):
         self._strategy = strategy
 
     def is_win(self):
-        reduce(lambda x, y: x.in_home() and y.in_home(), self._pawns)
+        i = 0
+        for pawn in self._pawns:
+            if pawn.in_home():
+                i += 1
+        return i == len(self._pawns)
 
     def move(self, card):
         self.strategy.apply(self, card)
@@ -231,7 +257,8 @@ class card(object):
 
 class cardcommon(card):
     def apply(self, pawn1, pawn2, mode, board, spaces):
-        pawn1.position = board.position(pawn1, spaces)
+        assert(pawn1.position >= 0)
+        assert(not pawn2)
         pawn1.position = board.position(pawn1, spaces)
 
     
@@ -239,68 +266,76 @@ class card1(cardcommon):
     " card 1: Move a pawn from Start or move a pawn one space forward.(unary) "
     CARD_MODE = ["START", "FORWARD"]
     def apply(self, pawn1, pawn2, mode, board):
-        if mode == CARD_MODE[1]:
-            super(self, cardcommon).apply(pawn1, pawn2, mode, board, 1)
+        assert(not pawn2)
+        if mode == self.CARD_MODE[1]:
+            super(card1, self).apply(pawn1, pawn2, mode, board, 1)
         else:
-            assert(mode == CARD_MODE[0])
+            assert(mode == self.CARD_MODE[0])
             pawn1.position = parameter().colors.index(pawn1.color)*15 + parameter().enterpoint_space
 
     def getmodes(self):
-        return card1.CARD_MODE
+        return self.CARD_MODE
 
 
 class card2(cardcommon):
     "card 2: Move a pawn from Start or move a pawn two spaces forward. Drawing a two entitles the player to draw again at the end of his or her turn. If the player cannot use a two to move, he or she can still draw again. (unary)"
     CARD_MODE = ["START", "FORWARD"]
     def apply(self, pawn1, pawn2, mode, board):
-        if mode == CARD_MODE[1]:
-            super(self, cardcommon).apply(pawn1, pawn2, mode, board, 2)
+        assert(not pawn2)
+        if mode == self.CARD_MODE[1]:
+            super(card2, self).apply(pawn1, pawn2, mode, board, 2)
         else:
             pawn1.position = parameter().colors.index(pawn1.color)*15 + parameter().enterpoint_space
 
 class card3(cardcommon):
     "card 3: Move a pawn three spaces forward. (unary)"
     def apply(self, pawn1, pawn2, mode, board):
-        super(self, cardcommon).apply(pawn1, pawn2, mode, board, 3)
+        assert(not pawn2)
+        super(card3, self).apply(pawn1, pawn2, mode, board, 3)
 
 class card4(cardcommon):
     "card 4: Move a pawn four spaces backward. (unary)"
     def apply(self, pawn1, pawn2, mode, board):
-        super(self, cardcommon).apply(pawn1, pawn2, mode, board, -4)
+        assert(not pawn2)
+        super(card4, self).apply(pawn1, pawn2, mode, board, -4)
         
 class card5(cardcommon):
     "card 5: Move a pawn five spaces forward. (unary)"
     def apply(self, pawn1, pawn2, mode, board):
-        super(self, cardcommon).apply(pawn1, pawn2, mode, board, 5)
+        assert(not pawn2)
+        super(card5, self).apply(pawn1, pawn2, mode, board, 5)
 
 class card7(cardcommon):
     "card 7: Move one pawn seven spaces forward, or split the seven spaces between two pawns (such as four spaces for one pawn and three for another). This makes it possible for two pawns to enter Home on the same turn, for example. The seven cannot be used to move a pawn out of Start, even if the player splits it into a six and one or a five and two. The entire seven spaces must be used or the turn is lost. You may not move backwards with a split. (binary)"
     def apply(self, pawn1, pawn2, mode, board):
-        super(self, cardcommon).apply(pawn1, pawn2, mode, board, 7)
+        assert(not pawn2)
+        super(card7, self).apply(pawn1, pawn2, mode, board, 7)
 
 class card8(cardcommon):
     "card 8: Move a pawn eight spaces forward. (unary)"
     def apply(self, pawn1, pawn2, mode, board):
-        super(self, cardcommon).apply(pawn1, pawn2, mode, board, 8)
+        assert(not pawn2)
+        super(card8, self).apply(pawn1, pawn2, mode, board, 8)
 
 class card10(cardcommon):
     "card 10: Move a pawn 10 spaces forward or one space backward. If none of a player's pawns can move forward 10 spaces, then one pawn must move back one space. (unary)"
     CARD_MODE = ["BACKWARD", "FORWARD"]
     def apply(self, pawn1, pawn2, mode, board):
-        if mode == CARD_MODE[1]:
-            super(self, cardcommon).apply(pawn1, pawn2, mode, board, 10)
+        assert(not pawn2)
+        if mode == self.CARD_MODE[1]:
+            super(card10, self).apply(pawn1, pawn2, mode, board, 10)
         else:
-            assert(mode == CARD_MODE[0])
-            super(self, cardcommon).apply(pawn1, pawn2, mode, board, -1)
+            assert(mode == self.CARD_MODE[0])
+            super(card10, self).apply(pawn1, pawn2, mode, board, -1)
 
 class card11(cardcommon):
     "card 11: Move 11 spaces forward, or switch the places of one of the player's own pawns and an opponent's pawn. A player that cannot move 11 spaces is not forced to switch and instead can forfeit the turn. An 11 cannot be used to switch a pawn that is in a Safety Zone. (unary/binary)"
     CARD_MODE = ["FORWARD", "EXCHANGE"]
     def apply(self, pawn1, pawn2, mode, board):
-        if mode == CARD_MODE[0]:
-            super(self, cardcommon).apply(pawn1, pawn2, mode, board, 11)
+        if mode == self.CARD_MODE[0]:
+            super(card11, self).apply(pawn1, pawn2, mode, board, 11)
         else:
-            assert(mode == CARD_MODE[1])
+            assert(mode == self.CARD_MODE[1])
             p = pawn1.position
             pawn1.position = pawn2.position
             pawn2.position = p
@@ -308,18 +343,18 @@ class card11(cardcommon):
 class card12(cardcommon):
     "card 12: Move a pawn 12 spaces forward. (unary)"
     def apply(self, pawn1, pawn2, mode, board):
-        super(self, cardcommon).apple(pawn1, pawn2, mode, board, 12)
+        assert(not pawn2)
+        super(card12, self).apply(pawn1, pawn2, mode, board, 12)
 
 class cardsorry(cardcommon):
     "card sorry: Take any one pawn from Start and move it directly to a square occupied by any opponent's pawn, sending that pawn back to its own Start. A Sorry! card cannot be used on an opponent's pawn in a Safety Zone. If there are no pawns on the player's Start, or no opponent's pawns on any squares outside Safety Zones, the turn is lost. (binary)"
     def apply(self, pawn1, pawn2, mode, board):
-        pawn1.positon = pawn2
-        pawn2.positon = -1
+        pawn1.position = pawn2.position
+        pawn2.position = -1
 
 
 class strategy(object):
-    def __init__(self, player, game):
-        self._player = player
+    def __init__(self, game):
         self._game = game
         self.cardstretegies = {type(card1()):self.card1_strategy, 
                                type(card2()):self.card2_strategy, 
@@ -334,19 +369,21 @@ class strategy(object):
                                type(cardsorry()):self.cardsorry_strategy
                                }
         
+    def set_player(self, player):
+        self._player = player
 
     def apply(self, card):
         self.cardstretegies[type(card)](card)
 
     def filtersortpawns(self):
         pawns = filter(lambda x: not self.game.board.in_home(x), self._player.pawns)
-        return sorted(pawns, lambda x, y: cmp(x.positon, y.positon))
+        return sorted(pawns, lambda x, y: cmp(x.position, y.position))
 
     def card1_2_common_strategy(self, card):
         pawns = self.filtersortpawns()
         done = False
         for pawn in pawns:
-            pos = self.game.board.positon(card, pawn)
+            pos = self.game.board.position(card, pawn)
             slided_pos = self.game.board.slide(pos)
             if slided_pos > pawns.position():
                 pawn.position = slided_pos
@@ -361,7 +398,7 @@ class strategy(object):
     def only_move_cards_common_strategy(self, card):
         pawns = self.filtersortpawns()
         for pawn in pawns:
-            pos = self.game.board.positon(card, pawn)
+            pos = self.game.board.position(card, pawn)
             slided_pos = self.game.board.slide(pos)
             if slided_pos > pawns.position():
                 pawn.position = slided_pos
@@ -370,7 +407,7 @@ class strategy(object):
     def move_backwards_strategy(self, card):
         pawns = self.filtersortpawns()
         for pawn in pawns[::-1]:
-            pos = self.game.board.positon(card, pawn)
+            pos = self.game.board.position(card, pawn)
             slided_pos = self.game.board.slide(pos)
             if slided_pos < pawns.position():
                 pawn.position = slided_pos
@@ -401,7 +438,7 @@ class strategy(object):
         pawns = self.filtersortpawns()
         done = False
         for pawn in pawns:
-            pos = self.game.board.positon(card, pawn)
+            pos = self.game.board.position(card, pawn)
             slided_pos = self.game.board.slide(pos)
             if slided_pos > pawns.position():
                 pawn.position = slided_pos
@@ -409,7 +446,7 @@ class strategy(object):
                 break
         if not done:
             for pawn in pawns[::-1]:
-                pos = self.game.board.positon(card, pawn)
+                pos = self.game.board.position(card, pawn)
                 slided_pos = self.game.board.slide(pos)
                 if slided_pos < pawns.position():
                     pawn.position = slided_pos
@@ -481,7 +518,10 @@ class game(object):
         self._strategy = strategy()
 
     def play():
-        pass
+        player_num = int(input("How many players?(MAX:4, MIN:2)"))
+        for i in xrange(player_num):
+            player_name = input("What is the player name for player %d?" % i)
+            self._players.append(player(player_name, parameter().colors[i], strategy(self)))
 
     @property
     def board(self):
