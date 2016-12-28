@@ -376,40 +376,49 @@ class strategy(object):
         self.cardstretegies[type(card)](card)
 
     def filtersortpawns(self):
-        pawns = filter(lambda x: not self.game.board.in_home(x), self._player.pawns)
-        return sorted(pawns, lambda x, y: cmp(x.position, y.position))
+        pawns = filter(lambda x: not self._game.board.in_home(x), self._player.pawns)
+        return sorted(pawns, lambda x, y: cmp(x.position, y.position), reverse=True)
 
     def card1_2_common_strategy(self, card):
         pawns = self.filtersortpawns()
         done = False
         for pawn in pawns:
-            pos = self.game.board.position(card, pawn)
-            slided_pos = self.game.board.slide(pos)
-            if slided_pos > pawns.position():
+            try:
+                card.apply(pawn, None, card.CARD_MODE[1], self._game._board)
+            except:
+                break
+            slided_pos = self._game.board.slide(pawn.position)
+            done = True
+            if slided_pos > pawn.position:
                 pawn.position = slided_pos
-                done = True
                 break
         if not done:
             for pawn in pawns:
                 if pawn.in_start():
-                    card.apply(pawn, None, card.CARD_MODE, self.game.board)
+                    card.apply(pawn, None, card.CARD_MODE[0], self._game.board)
                     break
 
     def only_move_cards_common_strategy(self, card):
         pawns = self.filtersortpawns()
         for pawn in pawns:
-            pos = self.game.board.position(card, pawn)
-            slided_pos = self.game.board.slide(pos)
-            if slided_pos > pawns.position():
+            try:
+                card.apply(pawn, None, None, self._game._board)
+            except:
+                return
+            slided_pos = self._game.board.slide(pawn.position)
+            if slided_pos > pawn.position:
                 pawn.position = slided_pos
                 break
 
     def move_backwards_strategy(self, card):
         pawns = self.filtersortpawns()
         for pawn in pawns[::-1]:
-            pos = self.game.board.position(card, pawn)
-            slided_pos = self.game.board.slide(pos)
-            if slided_pos < pawns.position():
+            try:
+                card.apply(pawn, None, None, self._game._board)
+            except:
+                continue
+            slided_pos = self._game.board.slide(pawn.position)
+            if slided_pos > pawn.position:
                 pawn.position = slided_pos
                 break
 
@@ -435,19 +444,19 @@ class strategy(object):
         only_move_cards_common_strategy(card)
 
     def card10_strategy(self, card):
-        pawns = self.filtersortpawns()
+        pawns = selif.filtersortpawns()
         done = False
         for pawn in pawns:
-            pos = self.game.board.position(card, pawn)
-            slided_pos = self.game.board.slide(pos)
+            pos = self._game.board.position(card, pawn)
+            slided_pos = self._game.board.slide(pos)
             if slided_pos > pawns.position():
                 pawn.position = slided_pos
                 done = True
                 break
         if not done:
             for pawn in pawns[::-1]:
-                pos = self.game.board.position(card, pawn)
-                slided_pos = self.game.board.slide(pos)
+                pos = self._game.board.position(card, pawn)
+                slided_pos = self._game.board.slide(pos)
                 if slided_pos < pawns.position():
                     pawn.position = slided_pos
                     break
@@ -457,7 +466,7 @@ class strategy(object):
         pawns = self.filtersortpawns()
         avaliable_pawn = False
         for pawn in pawns[::-1]:
-            if pawn.position >= 0 and not self.game.board.in_safetyzone(pawn):
+            if pawn.position >= 0 and not self._game.board.in_safetyzone(pawn):
                 avaliable_pawn = True
                 break
         if not avaliable_pawn: 
@@ -514,14 +523,10 @@ class strategy(object):
 class game(object):
     def __init__(self):
         self._board = board()
-        self._players = []
-        self._strategy = strategy()
-
-    def play():
-        player_num = int(input("How many players?(MAX:4, MIN:2)"))
-        for i in xrange(player_num):
-            player_name = input("What is the player name for player %d?" % i)
-            self._players.append(player(player_name, parameter().colors[i], strategy(self)))
+        self._strategies = [strategy(self), strategy(self), strategy(self), strategy(self)]
+        self._players = [player("0", "YELLOW", self._strategies[0]), player("1", "GREEN", self._strategies[1]), player("2", "RED", self._strategies[2]), player("3", "BLUE", self._strategies[3])]
+        for i in xrange(len(self._strategies)):
+            self._strategies[i].set_player(self._players[i])
 
     @property
     def board(self):
@@ -533,4 +538,4 @@ class game(object):
 
     @property
     def strategy(self):
-        return self._strategy
+        return self._strategies

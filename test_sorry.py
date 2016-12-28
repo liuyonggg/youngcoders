@@ -196,5 +196,59 @@ class PlayerTest(unittest.TestCase):
     def test_is_win_1(self):
         self.assertFalse(self.p.is_win())
 
+class StrategyTest(unittest.TestCase):
+    def setUp(self):
+        self.g = sorry.game()
+        self.s = sorry.strategy(self.g)
+        self.p = sorry.player("Bob", "YELLOW", self.s)
+        self.s.set_player(self.p)
+
+    def test_filtersortpawns_1(self):
+        self.assertEqual(self.s.filtersortpawns(), self.s._player._pawns)
+
+    def test_filtersortpawns_2(self):
+        self.s._player._pawns = [sorry.pawn("YELLOW", self.s._player, 7),
+                                sorry.pawn("YELLOW", self.s._player, 9),
+                                sorry.pawn("YELLOW", self.s._player, 2),
+                                sorry.pawn("YELLOW", self.s._player, 3)]
+        self.assertEqual(self.s.filtersortpawns()[0].position, 9)
+
+    def test_card1_2_common_strategy(self):
+        card = sorry.card1()
+        out = False
+        self.s.card1_2_common_strategy(card)
+        for pawn in self.s._player.pawns:
+            if pawn.position > 0:
+                out = True
+        self.assertTrue(out)
+        
+        i = 0
+        self.s.card1_2_common_strategy(card)
+        for pawn in self.s._player.pawns:
+            i += pawn.position
+        self.assertEqual(i, 1)
+
+    def test_only_move_cards_common_strategy_1(self):
+        card1 = sorry.card3()
+        card2 = sorry.card1()
+        self.s.card1_2_common_strategy(card2)
+        self.s.only_move_cards_common_strategy(card1)
+        self.assertEqual(self.s._player._pawns[0].position, 6)
+
+    def test_only_move_cards_common_strategy_2(self):
+        card1 = sorry.card3()
+        self.assertFalse(self.s.only_move_cards_common_strategy(card1))
+
+    def test_move_backwards_strategy_1(self):
+        card = sorry.card4()
+        self.assertFalse(self.s.move_backwards_strategy(card))
+
+#    def test_move_backwards_strategy_2(self):
+#        card1 = sorry.card1()
+#        card2 = sorry.card4() 
+#        self.s.card1_2_common_strategy(card1)
+#        self.s.move_backwards_strategy(card2)
+#        self.assertEqual(self.s._player._pawns[0].position, 0)
+
 if __name__ == "__main__":
     unittest.main()
