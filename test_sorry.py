@@ -68,13 +68,13 @@ class BoardTest(unittest.TestCase):
         self.assertEqual(self.b.position(self.p1, 9), 164)
 
     def test_slide_1(self):
-        self.assertEqual(self.b.slide(4), 4)
+        self.assertEqual(self.b.slide(self.p), 3)
 
     def test_slide_2(self):
-        self.assertEqual(self.b.slide(1), 4)
+        self.assertEqual(self.b.slide(sorry.pawn("GREEN", None, 0)), 3)
 
     def test_slide_3(self):
-        self.assertEqual(self.b.slide(39), 43)
+        self.assertEqual(self.b.slide(sorry.pawn("YELLOW", None, 38)), 42)
 
     def test_in_home_1(self):
         self.assertTrue(self.b.in_home(sorry.pawn("YELLOW", None, 167)))
@@ -242,6 +242,24 @@ class StrategyTest(unittest.TestCase):
     def test_move_backwards_strategy_1(self):
         card = sorry.card4()
         self.assertFalse(self.s.move_backwards_strategy(card))
+
+    def test_mock_play_1(self):
+        g = sorry.game()
+        s1 = sorry.strategy(g)
+        s2 = sorry.strategy(g)
+        p1 = sorry.player("Bob", "YELLOW", s1)
+        p2 = sorry.player("Joe", "GREEN", s2)
+        s1.set_player(p1)
+        s2.set_player(p2)
+        card = sorry.card1()
+        
+        for i in xrange(200):
+            s1.apply(card)
+            print p1.positions()
+            #s2.apply(card)
+
+        self.assertTrue(p1.is_win())
+        #self.assertTrue(p2.is_win())
 
 #    def test_move_backwards_strategy_2(self):
 #        card1 = sorry.card1()

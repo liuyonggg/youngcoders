@@ -35,10 +35,10 @@ class parameter(object):
     num_space = 60
     enterpoint_safety_zone = 1
     enterpoint_space = 3
-    slide_1_space_begin = 1
-    slide_1_space_end = 4
-    slide_2_space_begin = 9
-    slide_2_space_end = 13
+    slide_1_space_begin = 0
+    slide_1_space_end = 3
+    slide_2_space_begin = 8
+    slide_2_space_end = 12
     depth_safetyzone = 6
     start_position = -1
 
@@ -92,8 +92,10 @@ class safetyzone(object):
         new_pos = pos + spaces
         if (new_pos > home_pos):
             new_pos = home_pos - (new_pos - home_pos)
-        elif (new_pos <= self._prefix + self._enterpoint):
+        if (new_pos <= self._prefix + self._enterpoint):
             new_pos -= self._prefix
+            if new_pos < 0:
+                new_pos += 59
         return new_pos
 
     def in_safetyzone(self, pos):
@@ -134,19 +136,17 @@ class board(object):
     """
     def __init__(self):
         colors = parameter().colors
-        self._safetyzones = [safetyzone(colors[i], parameter().enterpoint_safety_zone + i * 15, parameter.num_space+100) for i in range(len(colors))]
+        self._safetyzones = [safetyzone(colors[i], parameter.enterpoint_safety_zone + i * 15, parameter.num_space+100) for i in range(len(colors))]
         self._slides = {}
         for i in range(len(colors)):
-            self._slides[i*15+1]  = i*15+4
-            self._slides[i*15+9]  = i*15+13
+            self._slides[i*15+parameter.slide_1_space_begin]  = i*15+parameter.slide_1_space_end
+            self._slides[i*15+parameter.slide_2_space_begin]  = i*15+parameter.slide_2_space_end
 
     def position(self, pawn, spaces):
         new_pos = pawn.position
         entering_safetyzone = False
         for i in xrange(abs(spaces)):
             sz = self._safetyzones[parameter.colors.index(pawn.color)]
-            if new_pos == 61:
-                new_pos = 1
             if sz.in_or_entering_safetyzone(new_pos):
                 entering_safetyzone = True
                 break
@@ -154,14 +154,17 @@ class board(object):
                 new_pos = new_pos - 1
             else:
                 new_pos = new_pos + 1
+            new_pos = new_pos % 60
         if entering_safetyzone:
             new_pos = sz.position(new_pos, spaces - i)
         return new_pos
 
-    def slide(self, pos):
-        new_pos = pos
-        if pos in self._slides:
-            new_pos = self._slides[pos]
+    def slide(self, pawn):
+        new_pos = pawn.position
+        if new_pos == parameter.colors.index(pawn.color)*15:
+            return new_pos
+        if pawn.position in self._slides:
+            new_pos = self._slides[pawn.position]
         return new_pos
 
     def in_home(self, pawn):
@@ -230,6 +233,9 @@ class player(object):
     @property
     def strategy(self):
         return self._strategy
+
+    def positions(self):
+        return "%s's pawn positions:\n\t%d\n\t%d\n\t%d\n\t%d" % (self._name, self._pawns[0].position, self._pawns[1].position, self._pawns[2].position, self._pawns[3].position)
 
 class card(object):
     """
@@ -387,7 +393,7 @@ class strategy(object):
                 card.apply(pawn, None, card.CARD_MODE[1], self._game._board)
             except:
                 break
-            slided_pos = self._game.board.slide(pawn.position)
+            slided_pos = self._game.board.slide(pawn)
             done = True
             if slided_pos > pawn.position:
                 pawn.position = slided_pos
@@ -405,7 +411,7 @@ class strategy(object):
                 card.apply(pawn, None, None, self._game._board)
             except:
                 return
-            slided_pos = self._game.board.slide(pawn.position)
+            slided_pos = self._game.board.slide(pawn)
             if slided_pos > pawn.position:
                 pawn.position = slided_pos
                 break
@@ -423,25 +429,25 @@ class strategy(object):
                 break
 
     def card1_strategy(self, card):
-        card1_2_common_strategy(card)
+        self.card1_2_common_strategy(card)
 
     def card2_strategy(self, card):
-        card1_2_common_strategy(card)
+        self.card1_2_common_strategy(card)
 
     def card3_strategy(self, card):
-        only_move_cards_common_strategy(card)
+        self.only_move_cards_common_strategy(card)
 
     def card4_strategy(self, card):
-        move_backwards_strategy(card)
+        self.move_backwards_strategy(card)
 
     def card5_strategy(self, card):
-        only_move_cards_common_strategy(card)
+        self.only_move_cards_common_strategy(card)
 
     def card7_strategy(self, card):
-        only_move_cards_common_strategy(card)
+        self.only_move_cards_common_strategy(card)
 
     def card8_strategy(self, card):
-        only_move_cards_common_strategy(card)
+        self.only_move_cards_common_strategy(card)
 
     def card10_strategy(self, card):
         pawns = selif.filtersortpawns()
@@ -495,7 +501,7 @@ class strategy(object):
             card.apply(pawn, min_pawn, card11.CARD_MODE[0], board)
 
     def card12_strategy(self, card):
-        only_move_cards_common_strategy(card)
+        self.only_move_cards_common_strategy(card)
 
     def cardsorry_strategy(self, card):
         pawns = self.filtersortpawns()
