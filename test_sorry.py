@@ -1,4 +1,5 @@
 import unittest
+import random
 import sorry
 
 class SafetyzoneTest(unittest.TestCase):
@@ -253,13 +254,193 @@ class StrategyTest(unittest.TestCase):
         s2.set_player(p2)
         card = sorry.card1()
         
-        for i in xrange(200):
+        for i in xrange(160):
             s1.apply(card)
-            print p1.positions()
-            #s2.apply(card)
+            s2.apply(card)
 
         self.assertTrue(p1.is_win())
-        #self.assertTrue(p2.is_win())
+        self.assertTrue(p2.is_win())
+
+    def test_mock_play_2(self):
+        g = sorry.game()
+        s1 = sorry.strategy(g)
+        s2 = sorry.strategy(g)
+        p1 = sorry.player("Bob", "YELLOW", s1)
+        p2 = sorry.player("Joe", "GREEN", s2)
+        s1.set_player(p1)
+        s2.set_player(p2)
+        card = sorry.card2()
+        
+        for i in xrange(28):
+            s1.apply(card)
+            s2.apply(card)
+
+        self.assertEqual(p1.pawns[0].position, 166)
+        self.assertEqual(p2.pawns[0].position, 181)
+
+    def test_mock_play_3(self):
+        g = sorry.game()
+        s1 = sorry.strategy(g)
+        s2 = sorry.strategy(g)
+        p1 = sorry.player("Bob", "YELLOW", s1)
+        p2 = sorry.player("Joe", "GREEN", s2)
+        s1.set_player(p1)
+        s2.set_player(p2)
+        card = sorry.card3()
+        card_out = sorry.card1()
+        
+        for i in xrange(19):
+            if not self.avaliable_pawns(p1.pawns):
+                s1.apply(card_out)
+                s2.apply(card_out)
+                continue
+            s1.apply(card)
+            s2.apply(card)
+
+        self.assertEqual(p1.pawns[0].position, 166)
+        self.assertEqual(p2.pawns[0].position, 181)
+
+    def test_mock_play_5(self):
+        g = sorry.game()
+        s1 = sorry.strategy(g)
+        s2 = sorry.strategy(g)
+        p1 = sorry.player("Bob", "YELLOW", s1)
+        p2 = sorry.player("Joe", "GREEN", s2)
+        s1.set_player(p1)
+        s2.set_player(p2)
+        card = sorry.card5()
+        card_out = sorry.card1()
+        
+        for i in xrange(56):
+            if not self.avaliable_pawns(p1.pawns):
+                s1.apply(card_out)
+                s2.apply(card_out)
+                continue
+            s1.apply(card)
+            s2.apply(card)
+
+        self.assertTrue(p1.is_win())
+        self.assertTrue(p2.is_win())
+
+    def test_mock_play_7(self):
+        g = sorry.game()
+        s1 = sorry.strategy(g)
+        s2 = sorry.strategy(g)
+        p1 = sorry.player("Bob", "YELLOW", s1)
+        p2 = sorry.player("Joe", "GREEN", s2)
+        s1.set_player(p1)
+        s2.set_player(p2)
+        card = sorry.card7()
+        card_out = sorry.card1()
+        
+        for i in xrange(11):
+            if not self.avaliable_pawns(p1.pawns):
+                s1.apply(card_out)
+                s2.apply(card_out)
+                continue
+            s1.apply(card)
+            s2.apply(card)
+
+        self.assertEqual(p1.pawns[0].position, 163)
+        self.assertEqual(p2.pawns[0].position, 178)
+
+    def test_mock_play_8(self):
+        g = sorry.game()
+        s1 = sorry.strategy(g)
+        s2 = sorry.strategy(g)
+        p1 = sorry.player("Bob", "YELLOW", s1)
+        p2 = sorry.player("Joe", "GREEN", s2)
+        s1.set_player(p1)
+        s2.set_player(p2)
+        card = sorry.card8()
+        card_out = sorry.card1()
+        
+        for i in xrange(36):
+            if not self.avaliable_pawns(p1.pawns):
+                s1.apply(card_out)
+                s2.apply(card_out)
+                continue
+            s1.apply(card)
+            s2.apply(card)
+
+        self.assertTrue(p1.is_win())
+        self.assertTrue(p2.is_win())
+    def test_mock_play_12(self):
+        g = sorry.game()
+        s1 = sorry.strategy(g)
+        s2 = sorry.strategy(g)
+        p1 = sorry.player("Bob", "YELLOW", s1)
+        p2 = sorry.player("Joe", "GREEN", s2)
+        s1.set_player(p1)
+        s2.set_player(p2)
+        card = sorry.card12()
+        card_out = sorry.card1()
+        
+        for i in xrange(36):
+            if not self.avaliable_pawns(p1.pawns):
+                s1.apply(card_out)
+                s2.apply(card_out)
+                continue
+            s1.apply(card)
+            s2.apply(card)
+
+        self.assertEqual(p1.pawns[0].position, 162)
+        self.assertEqual(p2.pawns[0].position, 177)
+
+    def test_mock_play_ordered_deck(self):
+        g = sorry.game()
+        s1 = sorry.strategy(g)
+        s2 = sorry.strategy(g)
+        p1 = sorry.player("Bob", "YELLOW", s1)
+        p2 = sorry.player("Joe", "GREEN", s2)
+        s1.set_player(p1)
+        s2.set_player(p2)
+        deck = [sorry.card1(),
+                sorry.card7(),
+                sorry.card8(),
+                sorry.card12(),
+                sorry.card2(),
+                sorry.card5(),
+                sorry.card3()]
+        
+        for i in xrange(8):
+            for card in deck:
+                s1.apply(card)
+                s2.apply(card)
+
+        self.assertTrue(p1.is_win())
+        self.assertTrue(p2.is_win())
+
+    def test_mock_play_random_deck(self):
+        random.seed(0)
+        g = sorry.game()
+        s1 = sorry.strategy(g)
+        s2 = sorry.strategy(g)
+        p1 = sorry.player("Bob", "YELLOW", s1)
+        p2 = sorry.player("Joe", "GREEN", s2)
+        s1.set_player(p1)
+        s2.set_player(p2)
+        deck = [sorry.card1(),
+                sorry.card7(),
+                sorry.card8(),
+                sorry.card12(),
+                sorry.card2(),
+                sorry.card5(),
+                sorry.card3()]
+        
+        while not p2.is_win():
+            card_1 = deck[random.randint(0, len(deck)-1)]
+            card_2 = deck[random.randint(0, len(deck)-1)]
+            s1.apply(card_1)
+            s2.apply(card_2)
+
+        self.assertTrue(p1.is_win())
+        self.assertTrue(p2.is_win())
+
+    def avaliable_pawns(self, pawns):
+        for pawn in pawns:
+            if not pawn.in_home() and not pawn.in_start():
+                return True
 
 #    def test_move_backwards_strategy_2(self):
 #        card1 = sorry.card1()

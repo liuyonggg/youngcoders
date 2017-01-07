@@ -72,7 +72,7 @@ class pawn(object):
         return self._position == parameter().start_position
 
     def in_home(self):
-        return self._position == parameter().enterpoint_space + parameter().depth_safetyzone + 100 +parameter().num_space
+        return self._position == parameter.colors.index(self._color) * 15 + parameter().enterpoint_safety_zone + parameter().depth_safetyzone + 100 +parameter().num_space
 
 class safetyzone(object):
     """ safetyzone: the place where the pawn won't be influence by opponents' pawn
