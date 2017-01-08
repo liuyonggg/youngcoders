@@ -442,12 +442,26 @@ class StrategyTest(unittest.TestCase):
             if not pawn.in_home() and not pawn.in_start():
                 return True
 
-#    def test_move_backwards_strategy_2(self):
-#        card1 = sorry.card1()
-#        card2 = sorry.card4() 
-#        self.s.card1_2_common_strategy(card1)
-#        self.s.move_backwards_strategy(card2)
-#        self.assertEqual(self.s._player._pawns[0].position, 0)
+    def test_move_backwards_strategy_2(self):
+        card1 = sorry.card1()
+        card2 = sorry.card4() 
+        self.s.card1_2_common_strategy(card1)
+        self.s.move_backwards_strategy(card2)
+        self.assertFalse(self.s._player._pawns[0].position)
+
+    def test_move_backwards_strategy_3(self):
+        card = sorry.card4() 
+        self.s._player._pawns[0].position = 162
+        self.s.move_backwards_strategy(card)
+        self.assertEqual(self.s._player._pawns[0].position, 58)
+
+    def test_card_10_strategy(self):
+        card1 = sorry.card10()
+        card2 = sorry.card1()
+        self.s.card1_2_common_strategy(card2)
+        self.s.card10_strategy(card1)
+        self.assertEqual(self.s._player._pawns[0].position, 13)
+        
 
 if __name__ == "__main__":
     unittest.main()

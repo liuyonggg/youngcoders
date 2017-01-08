@@ -29,6 +29,7 @@
    4. slide point: the first space to the 4th space, the 9th space to 13th space
 """
 import random
+import copy
 
 class parameter(object):
     colors = ["YELLOW", "GREEN", "RED", "BLUE"]
@@ -81,7 +82,7 @@ class safetyzone(object):
     def __init__(self, color, enterpoint, prefix_position):
         self._color = color
         self._enterpoint = enterpoint
-        self._depth = 6
+        self._depth = parameter.depth_safetyzone
         self._prefix = prefix_position
 
     def position(self, pos, spaces):
@@ -95,7 +96,7 @@ class safetyzone(object):
         if (new_pos <= self._prefix + self._enterpoint):
             new_pos -= self._prefix
             if new_pos < 0:
-                new_pos += 59
+                new_pos += 60
         return new_pos
 
     def in_safetyzone(self, pos):
@@ -143,21 +144,29 @@ class board(object):
             self._slides[i*15+parameter.slide_2_space_begin]  = i*15+parameter.slide_2_space_end
 
     def position(self, pawn, spaces):
+        if spaces < 0:
+            return self.negative_position(pawn, spaces)
         new_pos = pawn.position
         entering_safetyzone = False
-        for i in xrange(abs(spaces)):
+        for i in xrange(spaces):
             sz = self._safetyzones[parameter.colors.index(pawn.color)]
             if sz.in_or_entering_safetyzone(new_pos):
                 entering_safetyzone = True
                 break
-            if spaces < 0:
-                new_pos = new_pos - 1
-            else:
-                new_pos = new_pos + 1
+            new_pos = new_pos + 1
             new_pos = new_pos % 60
         if entering_safetyzone:
             new_pos = sz.position(new_pos, spaces - i)
         return new_pos
+
+    def negative_position(self, pawn, spaces):
+        start = parameter.colors.index(pawn.color) * parameter.enterpoint_space
+        if pawn.position > 100 + parameter.num_space + parameter.colors.index(pawn.color) * 15 + parameter.enterpoint_safety_zone:
+            return self._safetyzones[parameter.colors.index(pawn.color)].position(pawn.position, spaces)
+
+        if pawn.position + spaces < 2:
+            return
+        return pawn.position + spaces
 
     def slide(self, pawn):
         new_pos = pawn.position
@@ -423,7 +432,7 @@ class strategy(object):
                 card.apply(pawn, None, None, self._game._board)
             except:
                 continue
-            slided_pos = self._game.board.slide(pawn.position)
+            slided_pos = self._game.board.slide(pawn)
             if slided_pos > pawn.position:
                 pawn.position = slided_pos
                 break
@@ -450,23 +459,29 @@ class strategy(object):
         self.only_move_cards_common_strategy(card)
 
     def card10_strategy(self, card):
-        pawns = selif.filtersortpawns()
+        pawns = self.filtersortpawns()
         done = False
         for pawn in pawns:
-            pos = self._game.board.position(card, pawn)
-            slided_pos = self._game.board.slide(pos)
-            if slided_pos > pawns.position():
+            copy_pawn = copy.deepcopy(pawn)
+            try:
+                card.apply(copy_pawn, None, card.CARD_MODE[1], self._game.board)
+            except:
+                return
+            if copy_pawn.position < pawn.position:
+                break
+            slided_pos = self._game.board.slide(copy_pawn)
+            if slided_pos >= copy_pawn.position:
                 pawn.position = slided_pos
                 done = True
-                break
+                pawn = copy_pawn
+                return
         if not done:
-            for pawn in pawns[::-1]:
-                pos = self._game.board.position(card, pawn)
-                slided_pos = self._game.board.slide(pos)
-                if slided_pos < pawns.position():
-                    pawn.position = slided_pos
-                    break
-
+            for pawn in pawns:
+                try:
+                    card.apply(pawn, None, card.CARD_MODE[0], self._game.board)
+                except:
+                    return
+                pawn.position = self._game.board.slide(pos)
 
     def card11_strategy(self, card):
         pawns = self.filtersortpawns()
