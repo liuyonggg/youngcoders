@@ -354,7 +354,7 @@ class StrategyTest(unittest.TestCase):
         card2 = sorry.card4() 
         self.s.card1_2_common_strategy(card1)
         self.s.move_backwards_strategy(card2)
-        self.assertFalse(self.s._player._pawns[0].position)
+        self.assertEqual(self.s._player._pawns[0].position, 3)
 
     def test_move_10_startegy_1(self):
         card1 = sorry.card10()
@@ -406,6 +406,32 @@ class StrategyTest(unittest.TestCase):
         self.assertEqual(s2._player.pawns[0].position, -1)
 
     def test_mock_play_whole_deck(self):
+        random.seed(0)
+        s2 = sorry.strategy(self.g)
+        p2 = sorry.player("Joe", "GREEN", s2)
+        s2.set_player(p2)
+        self.g._players = [self.p, p2]
+        deck = [sorry.card1(),
+                sorry.card2(),
+                sorry.card3(),
+                sorry.card4(),
+                sorry.card5(),
+                sorry.card7(),
+                sorry.card8(),
+                sorry.card10(),
+                sorry.card11(),
+                sorry.cardsorry(),
+                sorry.card12()]
+        for i in xrange(140):
+            card1 = deck[random.randint(0, len(deck)-1)]
+            card2 = deck[random.randint(0, len(deck)-1)]
+            s2.apply(card1)
+            print card1
+            print p2.positions()
+            self.s.apply(card2)
+            print card2
+            print self.p.positions()
+            
 
 if __name__ == "__main__":
     unittest.main()

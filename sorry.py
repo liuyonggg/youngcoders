@@ -273,8 +273,9 @@ class card(object):
 class cardcommon(card):
     def apply(self, pawn1, pawn2, mode, board, spaces):
         assert(pawn1.position >= 0)
-        assert(not pawn2)
-        pawn1.position = board.position(pawn1, spaces)
+        new_pos = board.position(pawn1, spaces)
+        if new_pos != None:
+            pawn1.position = new_pos
 
     
 class card1(cardcommon):
