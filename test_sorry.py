@@ -344,99 +344,6 @@ class StrategyTest(unittest.TestCase):
         self.assertEqual(p1.pawns[0].position, 163)
         self.assertEqual(p2.pawns[0].position, 178)
 
-    def test_mock_play_8(self):
-        g = sorry.game()
-        s1 = sorry.strategy(g)
-        s2 = sorry.strategy(g)
-        p1 = sorry.player("Bob", "YELLOW", s1)
-        p2 = sorry.player("Joe", "GREEN", s2)
-        s1.set_player(p1)
-        s2.set_player(p2)
-        card = sorry.card8()
-        card_out = sorry.card1()
-        
-        for i in xrange(36):
-            if not self.avaliable_pawns(p1.pawns):
-                s1.apply(card_out)
-                s2.apply(card_out)
-                continue
-            s1.apply(card)
-            s2.apply(card)
-
-        self.assertTrue(p1.is_win())
-        self.assertTrue(p2.is_win())
-    def test_mock_play_12(self):
-        g = sorry.game()
-        s1 = sorry.strategy(g)
-        s2 = sorry.strategy(g)
-        p1 = sorry.player("Bob", "YELLOW", s1)
-        p2 = sorry.player("Joe", "GREEN", s2)
-        s1.set_player(p1)
-        s2.set_player(p2)
-        card = sorry.card12()
-        card_out = sorry.card1()
-        
-        for i in xrange(36):
-            if not self.avaliable_pawns(p1.pawns):
-                s1.apply(card_out)
-                s2.apply(card_out)
-                continue
-            s1.apply(card)
-            s2.apply(card)
-
-        self.assertEqual(p1.pawns[0].position, 162)
-        self.assertEqual(p2.pawns[0].position, 177)
-
-    def test_mock_play_ordered_deck(self):
-        g = sorry.game()
-        s1 = sorry.strategy(g)
-        s2 = sorry.strategy(g)
-        p1 = sorry.player("Bob", "YELLOW", s1)
-        p2 = sorry.player("Joe", "GREEN", s2)
-        s1.set_player(p1)
-        s2.set_player(p2)
-        deck = [sorry.card1(),
-                sorry.card7(),
-                sorry.card8(),
-                sorry.card12(),
-                sorry.card2(),
-                sorry.card5(),
-                sorry.card3()]
-        
-        for i in xrange(8):
-            for card in deck:
-                s1.apply(card)
-                s2.apply(card)
-
-        self.assertTrue(p1.is_win())
-        self.assertTrue(p2.is_win())
-
-    def test_mock_play_random_deck(self):
-        random.seed(0)
-        g = sorry.game()
-        s1 = sorry.strategy(g)
-        s2 = sorry.strategy(g)
-        p1 = sorry.player("Bob", "YELLOW", s1)
-        p2 = sorry.player("Joe", "GREEN", s2)
-        s1.set_player(p1)
-        s2.set_player(p2)
-        deck = [sorry.card1(),
-                sorry.card7(),
-                sorry.card8(),
-                sorry.card12(),
-                sorry.card2(),
-                sorry.card5(),
-                sorry.card3()]
-        
-        while not p2.is_win():
-            card_1 = deck[random.randint(0, len(deck)-1)]
-            card_2 = deck[random.randint(0, len(deck)-1)]
-            s1.apply(card_1)
-            s2.apply(card_2)
-
-        self.assertTrue(p1.is_win())
-        self.assertTrue(p2.is_win())
-
     def avaliable_pawns(self, pawns):
         for pawn in pawns:
             if not pawn.in_home() and not pawn.in_start():
@@ -449,19 +356,56 @@ class StrategyTest(unittest.TestCase):
         self.s.move_backwards_strategy(card2)
         self.assertFalse(self.s._player._pawns[0].position)
 
-    def test_move_backwards_strategy_3(self):
-        card = sorry.card4() 
-        self.s._player._pawns[0].position = 162
-        self.s.move_backwards_strategy(card)
-        self.assertEqual(self.s._player._pawns[0].position, 58)
-
-    def test_card_10_strategy(self):
+    def test_move_10_startegy_1(self):
         card1 = sorry.card10()
         card2 = sorry.card1()
-        self.s.card1_2_common_strategy(card2)
-        self.s.card10_strategy(card1)
+        self.s.apply(card2)
+        self.s.apply(card1)
         self.assertEqual(self.s._player._pawns[0].position, 13)
-        
+
+    def test_move_10_startegy_2(self):
+        card = sorry.card10()
+        self.s._player._pawns[0].position = 166
+        self.s.apply(card)
+        self.assertEqual(self.s._player._pawns[0].position, 165)
+
+    def test_move_11_startegy_1(self):
+        card = sorry.card11()
+        card1 = sorry.card1()
+        s2 = sorry.strategy(self.g)
+        p2 = sorry.player("Joe", "GREEN", s2)
+        s2.set_player(p2)
+        s2._player._pawns[0].position = 32
+        self.g._players = [self.p, p2]
+        self.s.apply(card1)
+        self.s.apply(card)
+        self.assertEqual(self.s._player.pawns[0].position, 32)
+        self.assertEqual(s2._player.pawns[0].position, 3)
+
+    def test_move_11_strategy_2(self):
+        card = sorry.card11()
+        card1 = sorry.card1()
+        self.s.apply(card1)
+        self.s.apply(card)
+        self.assertEqual(self.p.pawns[0].position, 14)
+
+    def test_move_11_strategy_3(self):
+        card = sorry.card11()
+        self.s.apply(card)
+        self.assertEqual(self.p.pawns[0].position, -1)
+
+    def test_move_sorry_strategy_1(self):
+        card = sorry.cardsorry()
+        s2 = sorry.strategy(self.g)
+        p2 = sorry.player("Joe", "GREEN", s2)
+        s2.set_player(p2)
+        s2._player._pawns[0].position = 32
+        self.g._players = [self.p, p2]
+        self.s.apply(card)
+        self.assertEqual(self.s._player.pawns[0].position, 32)
+        self.assertEqual(s2._player.pawns[0].position, -1)
+
+    def test_mock_play_whole_deck(self):
 
 if __name__ == "__main__":
     unittest.main()

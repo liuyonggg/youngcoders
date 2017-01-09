@@ -466,7 +466,7 @@ class strategy(object):
             try:
                 card.apply(copy_pawn, None, card.CARD_MODE[1], self._game.board)
             except:
-                return
+                break
             if copy_pawn.position < pawn.position:
                 break
             slided_pos = self._game.board.slide(copy_pawn)
@@ -481,7 +481,7 @@ class strategy(object):
                     card.apply(pawn, None, card.CARD_MODE[0], self._game.board)
                 except:
                     return
-                pawn.position = self._game.board.slide(pos)
+                pawn.position = self._game.board.slide(pawn)
 
     def card11_strategy(self, card):
         pawns = self.filtersortpawns()
@@ -500,20 +500,20 @@ class strategy(object):
         for player in self._game.players:
             if player != self._player:
                 for op in player.pawns:
-                    if not self._game.board.in_safetyzone(op) and op.position != parameter().start_position:
+                    if not self._game.board.in_safetyzone(op) and not op.in_start():
                         score = self._game.board.distance(pawn, op) - self._game.board.dist_home(op)
                         if score > max_score:
                             max_score = score
                             min_pawn = op
         if min_pawn:
             if self._game.board.distance(pawn, min_pawn) > 11:
-                card.apply(pawn, min_pawn, card11.CARD_MODE[1], board)
+                card.apply(pawn, min_pawn, card11.CARD_MODE[1], self._game.board)
             else:
-                card.apply(pawn, min_pawn, card11.CARD_MODE[0], board)
+                card.apply(pawn, min_pawn, card11.CARD_MODE[0], self._game.board)
         else:
             assert(not min_pawn)
             assert(max_score == -100)
-            card.apply(pawn, min_pawn, card11.CARD_MODE[0], board)
+            card.apply(pawn, min_pawn, card11.CARD_MODE[0], self._game.board)
 
     def card12_strategy(self, card):
         self.only_move_cards_common_strategy(card)
