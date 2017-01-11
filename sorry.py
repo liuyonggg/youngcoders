@@ -511,10 +511,12 @@ class strategy(object):
                 card.apply(pawn, min_pawn, card11.CARD_MODE[1], self._game.board)
             else:
                 card.apply(pawn, min_pawn, card11.CARD_MODE[0], self._game.board)
+                pawn.position = self._game.board.slide(pawn)
         else:
             assert(not min_pawn)
             assert(max_score == -100)
             card.apply(pawn, min_pawn, card11.CARD_MODE[0], self._game.board)
+            pawn.position = self._game.board.slide(pawn)
 
     def card12_strategy(self, card):
         self.only_move_cards_common_strategy(card)

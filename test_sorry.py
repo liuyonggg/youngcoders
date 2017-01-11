@@ -422,7 +422,7 @@ class StrategyTest(unittest.TestCase):
                 sorry.card11(),
                 sorry.cardsorry(),
                 sorry.card12()]
-        for i in xrange(140):
+        for i in xrange(136):
             card1 = deck[random.randint(0, len(deck)-1)]
             card2 = deck[random.randint(0, len(deck)-1)]
             s2.apply(card1)
@@ -431,6 +431,9 @@ class StrategyTest(unittest.TestCase):
             self.s.apply(card2)
             print card2
             print self.p.positions()
+
+        self.assertTrue(self.p.is_win())
+        self.assertTrue(p2.is_win())
             
 
 if __name__ == "__main__":
