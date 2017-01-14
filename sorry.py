@@ -486,13 +486,21 @@ class strategy(object):
 
     def card11_strategy(self, card):
         pawns = self.filtersortpawns()
-        avaliable_pawn = False
+        avaliable_pawn_1 = False
+        avaliable_pawn_2 = False
         for pawn in pawns[::-1]:
-            if pawn.position >= 0 and not self._game.board.in_safetyzone(pawn):
-                avaliable_pawn = True
-                break
-        if not avaliable_pawn: 
+            if pawn.position >= 0:
+                avaliable_pawn_1 = True
+                if not self._game.board.in_safetyzone(pawn):
+                    avaliable_pawn_2 = True
+                    break
+        if avaliable_pawn_1 and not avaliable_pawn_2: 
             # forfeit the turn due to no available pawns
+            card.apply(pawn, None, card11.CARD_MODE[0], self._game.board)
+            pawn.position = self._game.board.slide(pawn)
+            return
+
+        elif not avaliable_pawn_1 and not avaliable_pawn_2:
             return
 
         min_dist = parameter().num_space 

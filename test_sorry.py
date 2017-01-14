@@ -369,7 +369,7 @@ class StrategyTest(unittest.TestCase):
         self.s.apply(card)
         self.assertEqual(self.s._player._pawns[0].position, 165)
 
-    def test_move_11_startegy_1(self):
+    def test_move_11_strategy_1(self):
         card = sorry.card11()
         card1 = sorry.card1()
         s2 = sorry.strategy(self.g)
@@ -422,7 +422,7 @@ class StrategyTest(unittest.TestCase):
                 sorry.card11(),
                 sorry.cardsorry(),
                 sorry.card12()]
-        for i in xrange(136):
+        for i in xrange(161):
             card1 = deck[random.randint(0, len(deck)-1)]
             card2 = deck[random.randint(0, len(deck)-1)]
             s2.apply(card1)
