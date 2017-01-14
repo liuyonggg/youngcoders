@@ -26,7 +26,6 @@ def report_roulette(win):
     global game_you_played
     print ('*' * 80)
     print ('{:30}:  {:3d}'.format("game", game_you_played))
-    print ('{:30}: ${:3d}'.format("you won", game_you_played))
     print ('{:30}: ${:3d}'.format("you have", money_you_have))
     print ('{:30}: ${:3d}'.format("you won totally", money_you_have - money_you_have_beginning))
     print ('*' * 80)
