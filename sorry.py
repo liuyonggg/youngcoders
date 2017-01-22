@@ -559,6 +559,71 @@ class game(object):
         self._players = [player("0", "YELLOW", self._strategies[0]), player("1", "GREEN", self._strategies[1]), player("2", "RED", self._strategies[2]), player("3", "BLUE", self._strategies[3])]
         for i in xrange(len(self._strategies)):
             self._strategies[i].set_player(self._players[i])
+	#self._deck = [card1, card2, card3, card4, card5, card7, card8, card10, card11, card12]
+	self._deck = [card1]
+	self._card_dictionary = {card1:self.play_card_1, card2:self.play_card_2, card3:self.play_card_3, card4:self.play_card_4, card5:self.play_card_5, card7:self.play_card_7, card8:self.play_card_8, card10:self.play_card_10, card11:self.play_card_11, card12:self.play_card_12, cardsorry:self.play_card_sorry}
+
+    def play(self):
+        num_of_player = int(raw_input("How many players(up to 4)? "))
+	self._players = self._players[:num_of_player]
+	if len(self._players) < 1 or len(self._players) > 4:
+	    return
+	while all([not player.is_win() for player in self._players]):
+	    for player in self._players:
+		i = random.randint(0, len(self._deck)-1)
+		card = self._deck[i]
+		print "card %d" % i+1
+		self._card_dictionary[card](player)
+
+    def play_card_1(self, player):
+	pawn1 = player.pawns[0]
+	pawn2 = player.pawns[1]
+	pawn3 = player.pawns[2]
+	pawn4 = player.pawns[3]
+	while True:
+	    try:
+		n = raw_input("Enter a number(1 for pawn 1 which has the position of %d, 2 for pawn 2 which has the position of %d, 3 for pawn 3 which has the position of %d, 4 for pawn 4 which has the position of %d):" % (pawn1.position, pawn2.position, pawn3.position, pawn4.position))
+	    except:
+		"Wrong input!!!"
+
+	while True:
+	    try:
+		mode = card1.CARD_MODE[int(raw_input("Choose what to do(0 for exit start, 1 for forward)"))]
+		card1().apply(player.pawns[int(n)-1], None, mode, self._board)
+		break
+	    except:
+		print "Wrong input!!!"
+	print player.positions()
+
+    def play_card_2(player):
+	pass
+
+    def play_card_3(player):
+	pass
+
+    def play_card_4(player):
+	pass
+
+    def play_card_5(player):
+	pass
+
+    def play_card_7(player):
+	pass
+
+    def play_card_8(player):
+	pass
+
+    def play_card_10(player):
+	pass
+
+    def play_card_11(player):
+	pass
+
+    def play_card_12(player):
+	pass
+
+    def play_card_sorry(player):
+	pass
 
     @property
     def board(self):
