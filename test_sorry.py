@@ -434,7 +434,6 @@ class StrategyTest(unittest.TestCase):
 
         self.assertTrue(self.p.is_win())
         self.assertTrue(p2.is_win())
-            
 
 if __name__ == "__main__":
     unittest.main()

@@ -272,7 +272,8 @@ class card(object):
 
 class cardcommon(card):
     def apply(self, pawn1, pawn2, mode, board, spaces):
-        assert(pawn1.position >= 0)
+        if pawn1.position < 0:
+            return
         new_pos = board.position(pawn1, spaces)
         if new_pos != None:
             pawn1.position = new_pos
@@ -292,6 +293,11 @@ class card1(cardcommon):
     def getmodes(self):
         return self.CARD_MODE
 
+    def __str__(self):
+        return "You got card 1!"
+
+    def __repr__(self):
+        return self.__repr__()
 
 class card2(cardcommon):
     "card 2: Move a pawn from Start or move a pawn two spaces forward. Drawing a two entitles the player to draw again at the end of his or her turn. If the player cannot use a two to move, he or she can still draw again. (unary)"
@@ -302,36 +308,78 @@ class card2(cardcommon):
             super(card2, self).apply(pawn1, pawn2, mode, board, 2)
         else:
             pawn1.position = parameter().colors.index(pawn1.color)*15 + parameter().enterpoint_space
+            print ("DEBUG: %s" % pawn1)
+
+    def __str__(self):
+        return "You got card 2!"
+
+    def __repr__(self):
+        return self.__repr__()
 
 class card3(cardcommon):
     "card 3: Move a pawn three spaces forward. (unary)"
+    CARD_MODE = ["FORWARD"]
     def apply(self, pawn1, pawn2, mode, board):
         assert(not pawn2)
         super(card3, self).apply(pawn1, pawn2, mode, board, 3)
 
+    def __str__(self):
+        return "You got card 3!"
+
+    def __repr__(self):
+        return self.__repr__()
+
 class card4(cardcommon):
     "card 4: Move a pawn four spaces backward. (unary)"
+    CARD_MODE = ["BACKWARDS"]
     def apply(self, pawn1, pawn2, mode, board):
         assert(not pawn2)
         super(card4, self).apply(pawn1, pawn2, mode, board, -4)
-        
+
+    def __str__(self):
+        return "You got card 4!"
+
+    def __repr__(self):
+        return self.__repr__()
+
 class card5(cardcommon):
     "card 5: Move a pawn five spaces forward. (unary)"
+    CARD_MODE = ["FORWARD"]
     def apply(self, pawn1, pawn2, mode, board):
         assert(not pawn2)
         super(card5, self).apply(pawn1, pawn2, mode, board, 5)
 
+    def __str__(self):
+        return "You got card 5!"
+
+    def __repr__(self):
+        return self.__repr__()
+
 class card7(cardcommon):
     "card 7: Move one pawn seven spaces forward, or split the seven spaces between two pawns (such as four spaces for one pawn and three for another). This makes it possible for two pawns to enter Home on the same turn, for example. The seven cannot be used to move a pawn out of Start, even if the player splits it into a six and one or a five and two. The entire seven spaces must be used or the turn is lost. You may not move backwards with a split. (binary)"
+    CARD_MODE = ["FORWARD", "SPLIT"]
     def apply(self, pawn1, pawn2, mode, board):
         assert(not pawn2)
         super(card7, self).apply(pawn1, pawn2, mode, board, 7)
 
+    def __str__(self):
+        return "You got card 7!"
+
+    def __repr__(self):
+        return self.__repr__()
+
 class card8(cardcommon):
     "card 8: Move a pawn eight spaces forward. (unary)"
+    CARD_MODE = ["FORWARD"]
     def apply(self, pawn1, pawn2, mode, board):
         assert(not pawn2)
         super(card8, self).apply(pawn1, pawn2, mode, board, 8)
+
+    def __str__(self):
+        return "You got card 8!"
+
+    def __repr__(self):
+        return self.__repr__()
 
 class card10(cardcommon):
     "card 10: Move a pawn 10 spaces forward or one space backward. If none of a player's pawns can move forward 10 spaces, then one pawn must move back one space. (unary)"
@@ -343,6 +391,12 @@ class card10(cardcommon):
         else:
             assert(mode == self.CARD_MODE[0])
             super(card10, self).apply(pawn1, pawn2, mode, board, -1)
+
+    def __str__(self):
+        return "You got card 10!"
+
+    def __repr__(self):
+        return self.__repr__()
 
 class card11(cardcommon):
     "card 11: Move 11 spaces forward, or switch the places of one of the player's own pawns and an opponent's pawn. A player that cannot move 11 spaces is not forced to switch and instead can forfeit the turn. An 11 cannot be used to switch a pawn that is in a Safety Zone. (unary/binary)"
@@ -356,11 +410,24 @@ class card11(cardcommon):
             pawn1.position = pawn2.position
             pawn2.position = p
 
+    def __str__(self):
+        return "You got card 11!"
+
+    def __repr__(self):
+        return self.__repr__()
+
 class card12(cardcommon):
     "card 12: Move a pawn 12 spaces forward. (unary)"
+    CARD_MODE = ["FORWARD"]
     def apply(self, pawn1, pawn2, mode, board):
         assert(not pawn2)
         super(card12, self).apply(pawn1, pawn2, mode, board, 12)
+
+    def __str__(self):
+        return "You got card 12!"
+
+    def __repr__(self):
+        return self.__repr__()
 
 class cardsorry(cardcommon):
     "card sorry: Take any one pawn from Start and move it directly to a square occupied by any opponent's pawn, sending that pawn back to its own Start. A Sorry! card cannot be used on an opponent's pawn in a Safety Zone. If there are no pawns on the player's Start, or no opponent's pawns on any squares outside Safety Zones, the turn is lost. (binary)"
@@ -368,6 +435,11 @@ class cardsorry(cardcommon):
         pawn1.position = pawn2.position
         pawn2.position = -1
 
+    def __str__(self):
+        return "You got card sorry!"
+
+    def __repr__(self):
+        return self.__repr__()
 
 class strategy(object):
     def __init__(self, game):
@@ -552,78 +624,162 @@ class strategy(object):
         if min_pawn:
             card.apply(pawn, min_pawn, None, board)
 
+class manual_strategy(strategy):
+    def apply(self, card, pawn, mode):
+        self.cardstretegies[type(card)](card, pawn, mode)
+
+    def card1_2_common_strategy(self, card, pawn, mode):
+        card.apply(pawn, None, mode, self._game._board)
+
+    def only_move_cards_common_strategy(self, card, pawn, mode):
+        card.apply(pawn, None, mode, self._game._board)
+
+    def card1_strategy(self, card, pawn, mode):
+        self.card1_2_common_strategy(card, pawn, mode)
+
+    def card2_strategy(self, card, pawn, mode):
+        self.card1_2_common_strategy(card, pawn, mode)
+
+    def card3_strategy(self, card, pawn, mode):
+        self.only_move_cards_common_strategy(card, pawn, mode)
+
+    def card4_strategy(self, card, pawn, mode):
+        self.only_move_cards_common_strategy(card, pawn, mode)
+
+    def card5_strategy(self, card, pawn, mode):
+        self.only_move_cards_common_strategy(card, pawn, mode)
+
+    def card7_strategy(self, card, pawn, mode):
+        if mode == card.CARD_MODE[0]:
+            self.only_move_cards_common_strategy(card, pawn, mode)
+        else:
+            self.card7_split_mode_strategy()
+
+    def card7_split_mode_strategy(self):
+        pawns = []
+        while True:
+            pawn1 = raw_input("Enter the pawn number for the first pawn: ")
+            pawn2 = raw_input("Enter the pawn number for the second pawn: ")
+            try:
+                pawn1 = int(pawn1)
+                pawn2 = int(pawn2)
+            except ValueError:
+                print("Wrong input!!!")
+            if pawn1 < 4 and pawn1 >= 0 and pawn2 >= 0 and pawn2 < 4:
+                break
+            print("Wrong input!!!")
+
+        while True:
+            steps1 = raw_input("Enter the number of steps for the first pawn: ")
+            steps2 = raw_input("Enter the number of steps for the second pawn: ")
+            try:
+                steps1 = int(steps1)
+                steps2 = int(steps2)
+            except ValueError:
+                print("Wrong input!!!")
+            if steps1 > 0 and steps2 > 0 and steps1 + steps2 == 7:
+                break
+            print("Wrong input!!!")
+
+        pawn1 = self._player.pawns[pawn1-1]
+        pawn2 = self._player.pawns[pawn2-1]
+        cardcommon().apply(pawn1, None, None, self._game._board, steps1)
+        cardcommon().apply(pawn2, None, None, self._game._board, steps2)
+
+    def card8_strategy(self, card, pawn, mode):
+        self.only_move_cards_common_strategy(card, pawn, mode)
+
+    def card10_strategy(self, card):
+        pass
+
+    def card11_strategy(self, card):
+        pass
+
+    def card12_strategy(self, card, pawn, mode):
+        self.only_move_cards_common_strategy(card, pawn, mode)
+
+    def cardsorry_strategy(self, card):
+        pass
+
+
 class game(object):
     def __init__(self):
         self._board = board()
-        self._strategies = [strategy(self), strategy(self), strategy(self), strategy(self)]
+        self._strategies = [manual_strategy(self), manual_strategy(self), manual_strategy(self), manual_strategy(self)]
         self._players = [player("0", "YELLOW", self._strategies[0]), player("1", "GREEN", self._strategies[1]), player("2", "RED", self._strategies[2]), player("3", "BLUE", self._strategies[3])]
         for i in xrange(len(self._strategies)):
             self._strategies[i].set_player(self._players[i])
-	#self._deck = [card1, card2, card3, card4, card5, card7, card8, card10, card11, card12]
-	self._deck = [card1]
-	self._card_dictionary = {card1:self.play_card_1, card2:self.play_card_2, card3:self.play_card_3, card4:self.play_card_4, card5:self.play_card_5, card7:self.play_card_7, card8:self.play_card_8, card10:self.play_card_10, card11:self.play_card_11, card12:self.play_card_12, cardsorry:self.play_card_sorry}
+        #self._deck = [card1, card2, card3, card4, card5, card7, card8, card10, card11, card12]
+        self._deck = [card1(), card7()]
 
     def play(self):
-        num_of_player = int(raw_input("How many players(up to 4)? "))
-	self._players = self._players[:num_of_player]
-	if len(self._players) < 1 or len(self._players) > 4:
-	    return
-	while all([not player.is_win() for player in self._players]):
-	    for player in self._players:
-		i = random.randint(0, len(self._deck)-1)
-		card = self._deck[i]
-		print "card %d" % i+1
-		self._card_dictionary[card](player)
+        random.seed(0)
+        num_of_player = int(raw_input("How many players(up to 4)?\n"))
+        self._players = self._players[:num_of_player]
+        if len(self._players) < 2 or len(self._players) > 4:
+            return
+        while True:
+            auto_players = raw_input("How many automatic players(up to %d)\n" % (len(self._players)-1))
+            try:
+                auto_players = int(auto_players)
+            except ValueError:
+                print("Wrong input!!!\n")
+                continue
 
-    def play_card_1(self, player):
-	pawn1 = player.pawns[0]
-	pawn2 = player.pawns[1]
-	pawn3 = player.pawns[2]
-	pawn4 = player.pawns[3]
-	while True:
-	    try:
-		n = raw_input("Enter a number(1 for pawn 1 which has the position of %d, 2 for pawn 2 which has the position of %d, 3 for pawn 3 which has the position of %d, 4 for pawn 4 which has the position of %d):" % (pawn1.position, pawn2.position, pawn3.position, pawn4.position))
-	    except:
-		"Wrong input!!!"
+            if int(auto_players) < len(self._players):
+                break
+            print("Wrong input!!!\n")
 
-	while True:
-	    try:
-		mode = card1.CARD_MODE[int(raw_input("Choose what to do(0 for exit start, 1 for forward)"))]
-		card1().apply(player.pawns[int(n)-1], None, mode, self._board)
-		break
-	    except:
-		print "Wrong input!!!"
-	print player.positions()
+        for i in xrange(len(self._strategies[:auto_players])):
+            self._strategies[i] = strategy(self)
+            old_player = self._players[i]
+            self._players[i] = player(old_player.name, old_player.color, self._strategies[i])
+            self._strategies[i].set_player(self._players[i])
 
-    def play_card_2(player):
-	pass
+        while all([not game_player.is_win() for game_player in self._players]):
+            j = 0
+            for game_player in self._players:
+                for playeri in self._players:
+                    print(playeri.positions())
+                print("It is player %d's turn\n" % j)
+                i = random.randint(0, len(self._deck)-1)
+                card = self._deck[i]
 
-    def play_card_3(player):
-	pass
+                if len(card.CARD_MODE) == 1:
+                    print(card)
+                    print("\nThe only mode is %s\n".capitalize() % card.CARD_MODE[0])
+                else:
+                    assert(len(card.CARD_MODE) == 2)
+                    print(card)
+                    print("\nThe modes are 1. %s and 2. %s\n".capitalize() % (card.CARD_MODE[0], card.CARD_MODE[1]))
 
-    def play_card_4(player):
-	pass
+                while True:
+                    pawn = raw_input("Enter a number(1 for pawn 1 which has the position of %d, 2 for pawn 2 which has the position of %d, 3 for pawn 3 which has the position of %d, 4 for pawn 4 which has the position of %d):\n" % (game_player._pawns[0].position, game_player._pawns[1].position, game_player._pawns[2].position, game_player._pawns[3].position))
+                    try:
+                        pawn = int(pawn)
+                    except ValueError:
+                        print("Wrong input!!!\n")
+                        continue
 
-    def play_card_5(player):
-	pass
+                    if pawn > 0 and pawn <= 4:
+                        break
+                    print("Wrong input!!!\n")
 
-    def play_card_7(player):
-	pass
+                while True:
+                    mode = raw_input("Choose what to do(0 for mode 1, 1 for mode 2)\n")
+                    if mode == '0' or mode == '1':
+                        mode = int(mode)
+                        if mode + 1 <= len(card.CARD_MODE):
+                            break
+                    print "Wrong input!!!\n"
+                
+                pawn = game_player.pawns[pawn-1]
+                mode = card.CARD_MODE[mode]
+                print mode
+                game_player._strategy.apply(card, pawn, mode)
+                j += 1
 
-    def play_card_8(player):
-	pass
-
-    def play_card_10(player):
-	pass
-
-    def play_card_11(player):
-	pass
-
-    def play_card_12(player):
-	pass
-
-    def play_card_sorry(player):
-	pass
+        print("Thank you for playing!")
 
     @property
     def board(self):
