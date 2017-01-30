@@ -297,7 +297,7 @@ class card1(cardcommon):
         return "You got card 1!"
 
     def __repr__(self):
-        return self.__repr__()
+        return self.__str__()
 
 class card2(cardcommon):
     "card 2: Move a pawn from Start or move a pawn two spaces forward. Drawing a two entitles the player to draw again at the end of his or her turn. If the player cannot use a two to move, he or she can still draw again. (unary)"
@@ -314,7 +314,7 @@ class card2(cardcommon):
         return "You got card 2!"
 
     def __repr__(self):
-        return self.__repr__()
+        return self.__str__()
 
 class card3(cardcommon):
     "card 3: Move a pawn three spaces forward. (unary)"
@@ -327,7 +327,7 @@ class card3(cardcommon):
         return "You got card 3!"
 
     def __repr__(self):
-        return self.__repr__()
+        return self.__str__()
 
 class card4(cardcommon):
     "card 4: Move a pawn four spaces backward. (unary)"
@@ -340,7 +340,7 @@ class card4(cardcommon):
         return "You got card 4!"
 
     def __repr__(self):
-        return self.__repr__()
+        return self.__str__()
 
 class card5(cardcommon):
     "card 5: Move a pawn five spaces forward. (unary)"
@@ -353,7 +353,7 @@ class card5(cardcommon):
         return "You got card 5!"
 
     def __repr__(self):
-        return self.__repr__()
+        return self.__str__()
 
 class card7(cardcommon):
     "card 7: Move one pawn seven spaces forward, or split the seven spaces between two pawns (such as four spaces for one pawn and three for another). This makes it possible for two pawns to enter Home on the same turn, for example. The seven cannot be used to move a pawn out of Start, even if the player splits it into a six and one or a five and two. The entire seven spaces must be used or the turn is lost. You may not move backwards with a split. (binary)"
@@ -366,7 +366,7 @@ class card7(cardcommon):
         return "You got card 7!"
 
     def __repr__(self):
-        return self.__repr__()
+        return self.__str__()
 
 class card8(cardcommon):
     "card 8: Move a pawn eight spaces forward. (unary)"
@@ -379,7 +379,7 @@ class card8(cardcommon):
         return "You got card 8!"
 
     def __repr__(self):
-        return self.__repr__()
+        return self.__str__()
 
 class card10(cardcommon):
     "card 10: Move a pawn 10 spaces forward or one space backward. If none of a player's pawns can move forward 10 spaces, then one pawn must move back one space. (unary)"
@@ -396,7 +396,7 @@ class card10(cardcommon):
         return "You got card 10!"
 
     def __repr__(self):
-        return self.__repr__()
+        return self.__str__()
 
 class card11(cardcommon):
     "card 11: Move 11 spaces forward, or switch the places of one of the player's own pawns and an opponent's pawn. A player that cannot move 11 spaces is not forced to switch and instead can forfeit the turn. An 11 cannot be used to switch a pawn that is in a Safety Zone. (unary/binary)"
@@ -414,7 +414,7 @@ class card11(cardcommon):
         return "You got card 11!"
 
     def __repr__(self):
-        return self.__repr__()
+        return self.__str__()
 
 class card12(cardcommon):
     "card 12: Move a pawn 12 spaces forward. (unary)"
@@ -427,7 +427,7 @@ class card12(cardcommon):
         return "You got card 12!"
 
     def __repr__(self):
-        return self.__repr__()
+        return self.__str__()
 
 class cardsorry(cardcommon):
     "card sorry: Take any one pawn from Start and move it directly to a square occupied by any opponent's pawn, sending that pawn back to its own Start. A Sorry! card cannot be used on an opponent's pawn in a Safety Zone. If there are no pawns on the player's Start, or no opponent's pawns on any squares outside Safety Zones, the turn is lost. (binary)"
@@ -439,7 +439,7 @@ class cardsorry(cardcommon):
         return "You got card sorry!"
 
     def __repr__(self):
-        return self.__repr__()
+        return self.__str__()
 
 class strategy(object):
     def __init__(self, game):
@@ -456,6 +456,12 @@ class strategy(object):
                                type(card12()):self.card12_strategy, 
                                type(cardsorry()):self.cardsorry_strategy
                                }
+
+    def __str__(self):
+        return "Automatic"
+
+    def __repr__(self):
+        return self.__str__()
         
     def set_player(self, player):
         self._player = player
@@ -625,14 +631,19 @@ class strategy(object):
             card.apply(pawn, min_pawn, None, board)
 
 class manual_strategy(strategy):
+    def __str__(self):
+        return "Manual"
+
     def apply(self, card, pawn, mode):
         self.cardstretegies[type(card)](card, pawn, mode)
 
     def card1_2_common_strategy(self, card, pawn, mode):
         card.apply(pawn, None, mode, self._game._board)
+        pawn.position = self._game._board.slide(pawn)
 
     def only_move_cards_common_strategy(self, card, pawn, mode):
         card.apply(pawn, None, mode, self._game._board)
+        pawn.position = self._game._board.slide(pawn)
 
     def card1_strategy(self, card, pawn, mode):
         self.card1_2_common_strategy(card, pawn, mode)
@@ -684,7 +695,9 @@ class manual_strategy(strategy):
         pawn1 = self._player.pawns[pawn1-1]
         pawn2 = self._player.pawns[pawn2-1]
         cardcommon().apply(pawn1, None, None, self._game._board, steps1)
+        pawn1.position = self._game._board.slide(pawn1)
         cardcommon().apply(pawn2, None, None, self._game._board, steps2)
+        pawn2.position = self._game._board.slide(pawn2)
 
     def card8_strategy(self, card, pawn, mode):
         self.only_move_cards_common_strategy(card, pawn, mode)
@@ -709,8 +722,7 @@ class game(object):
         self._players = [player("0", "YELLOW", self._strategies[0]), player("1", "GREEN", self._strategies[1]), player("2", "RED", self._strategies[2]), player("3", "BLUE", self._strategies[3])]
         for i in xrange(len(self._strategies)):
             self._strategies[i].set_player(self._players[i])
-        #self._deck = [card1, card2, card3, card4, card5, card7, card8, card10, card11, card12]
-        self._deck = [card1(), card7()]
+        self._deck = [card1(), card2(), card3(), card4(), card5(), card7(), card8(), card12()]
 
     def play(self):
         random.seed(0)
@@ -737,20 +749,22 @@ class game(object):
             self._strategies[i].set_player(self._players[i])
 
         while all([not game_player.is_win() for game_player in self._players]):
-            j = 0
             for game_player in self._players:
                 for playeri in self._players:
                     print(playeri.positions())
-                print("It is player %d's turn\n" % j)
+                print("It is player %s's turn\n" % game_player.name)
                 i = random.randint(0, len(self._deck)-1)
                 card = self._deck[i]
+                print(card)
+                if str(game_player._strategy) == "Automatic":
+                    print("...\n")
+                    game_player._strategy.apply(card)
+                    continue
 
                 if len(card.CARD_MODE) == 1:
-                    print(card)
                     print("\nThe only mode is %s\n".capitalize() % card.CARD_MODE[0])
                 else:
                     assert(len(card.CARD_MODE) == 2)
-                    print(card)
                     print("\nThe modes are 1. %s and 2. %s\n".capitalize() % (card.CARD_MODE[0], card.CARD_MODE[1]))
 
                 while True:
@@ -777,7 +791,6 @@ class game(object):
                 mode = card.CARD_MODE[mode]
                 print mode
                 game_player._strategy.apply(card, pawn, mode)
-                j += 1
 
         print("Thank you for playing!")
 
