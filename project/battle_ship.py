@@ -36,8 +36,8 @@ def init_board():
 
                         ]
     ship_grid_pc = [\
-                     [True, True, False, False, False, False, False, False, False], 
-                     [True, True, False, False, False, False, False, False, False], 
+                     [False, False, False, False, False, False, False, False, False], 
+                     [False, False, False, False, False, False, False, False, False], 
                      [False, False, False, False, False, False, False, False, False], 
                      [False, False, False, False, False, False, False, False, False], 
                      [False, False, False, False, False, False, False, False, False], 
@@ -97,21 +97,38 @@ def strategy(grid):
         if i > 1000:
             assert(False)
 
-def place_ship(ship_grid):
-    coordinate = strategy(ship_grid)
-    ship_grid[coordinate[0]][coordinate[1]] = True
+def place_ship(ship_grid, coordinate):
+    ship_grid[coordinate[0]][coordinate[1]] == True
+
+def input_coordinate():
+    coordinate = []
+    coordinate.append(int(input("Enter your y-coordinate: ")))
+    print()
+    coordinate.append(int(input("Enter your x-coordinate: ")))
+    print()
+    return coordinate
+
+def set_all_ships():
+    for i in range(5):
+        place_ship(ship_grid_pc, strategy(ship_grid_pc))
+        place_ship(ship_grid_user, input_coordinate())
 
 def game_play():
     global attack_grid_user
     global attack_grid_pc
     global ship_grid_user
     global ship_grid_pc
-    init_board()
+    set_all_ships()
+    print("ships have been placed...")
     while True:
+        cr = input_coordinate()
+        attack(cr, attack_grid_pc)
         cr = strategy(attack_grid_user)
         attack(cr, attack_grid_user)
-        cr = strategy(attack_grid_pc)
-        attack(cr, attack_grid_pc)
+        print("The below grid is your attack spots")
+        display(ship_grid_pc, attack_grid_pc)
+        print("The below grid is your opponent's attack spots")
+        display(ship_grid_user, attack_grid_user)
         pc_win = check_win(ship_grid_user, attack_grid_user)
         user_win = check_win(ship_grid_pc, attack_grid_pc)
         if user_win and pc_win:
@@ -179,11 +196,12 @@ def test_display():
     init_board()
     display(ship_grid_user, attack_grid_user)
 
-def test_game_play():
-    game_play()
-    display(ship_grid_user, attack_grid_user)
-    display(ship_grid_pc, attack_grid_pc)
+#def test_game_play():
+#    game_play()
+#    display(ship_grid_user, attack_grid_user)
+#    display(ship_grid_pc, attack_grid_pc)
 
+game_play()
 #test_display()
 #play()
 
@@ -191,6 +209,6 @@ def test_game_play():
 #test_check_win()
 #test_strategy()
 
-test_game_play()
+#test_game_play()
 
 
